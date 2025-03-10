@@ -218,18 +218,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.rect(clipX, clipY, imageSize, imageSize);
             ctx.clip();
 
-            // 使用與預覽相同的縮放邏輯
+            // 計算縮放後的尺寸
             const scaledSize = originalSize / Math.max(zoom, 1);
-            const drawSize = imageSize * Math.max(1, zoom);
+            const drawSize = imageSize * Math.max(zoom, 1);
 
-            // 計算繪製位置，使其與預覽一致
+            // 計算繪製位置，確保與預覽一致
             const drawX = centerX - (drawSize / 2);
             const drawY = centerY - (drawSize / 2);
-            
+
+            // 計算源圖像的裁剪區域
+            const sourceX = currentX;
+            const sourceY = currentY;
+            const sourceWidth = scaledSize;
+            const sourceHeight = scaledSize;
+
             ctx.drawImage(
                 originalImage,
-                currentX, currentY,
-                scaledSize, scaledSize,
+                sourceX, sourceY,
+                sourceWidth, sourceHeight,
                 drawX, drawY,
                 drawSize, drawSize
             );
