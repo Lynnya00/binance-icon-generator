@@ -201,6 +201,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             canvas.width = totalSize;
             canvas.height = totalSize;
 
+            // 設定透明背景
+            ctx.clearRect(0, 0, totalSize, totalSize);
+
             const zoom = parseInt(zoomInput.value) / 100;
             const imageSize = Math.round(totalSize * 0.8);
             const scaledSize = originalSize / Math.max(zoom, 1);
@@ -208,29 +211,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             const centerX = totalSize / 2;
             const centerY = totalSize / 2;
 
-            // 先畫黑色背景
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, totalSize, totalSize);
-
-            // 繪製圖片（方形不需要裁剪）
-            const drawSize = imageSize;
-            const x = centerX - drawSize / 2;
-            const y = centerY - drawSize / 2;
+            // 創建方形裁剪區域
+            ctx.save();
+            ctx.beginPath();
+            const x = centerX - imageSize / 2;
+            const y = centerY - imageSize / 2;
+            ctx.rect(x, y, imageSize, imageSize);
+            ctx.clip();
             
             ctx.drawImage(
                 originalImage,
                 currentX, currentY,
                 scaledSize, scaledSize,
                 x, y,
-                drawSize, drawSize
+                imageSize, imageSize
             );
+            ctx.restore();
 
             // 繪製邊框圖片
             ctx.drawImage(frameImageObj, 0, 0, totalSize, totalSize);
 
             const link = document.createElement('a');
             link.download = 'edited-image.png';
-            link.href = canvas.toDataURL('image/png', 1.0);
+            // 確保使用 PNG 格式並保留透明度
+            link.href = canvas.toDataURL('image/png');
             link.click();
         } catch (error) {
             console.error('下載圖片時發生錯誤:', error);
