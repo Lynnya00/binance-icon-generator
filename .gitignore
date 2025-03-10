@@ -1,0 +1,13 @@
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# 編輯器檔案
+.vscode/
+.idea/
+
+# 壓縮檔
+*.zip
+
+# 批次檔
+*.bat 

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Frame - Binance Icon Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html" class="back-button">
+                返回
+                <span class="en">Back</span>
+            </a>
+            <h1>
+                圓形框架編輯器
+                <div class="en">Binance Icon Generator</div>
+            </h1>
+        </div>
+        <div class="upload-section">
+            <input type="file" id="imageInput" accept="image/*">
+            <label for="imageInput" class="upload-button">
+                選擇圖片
+                <span class="en">Choose Image</span>
+            </label>
+        </div>
+        
+        <div class="editor-container" id="editorContainer" style="display: none;">
+            <div class="image-container">
+                <div class="preview-container">
+                    <img id="previewImage" src="" alt="預覽圖片">
+                </div>
+                <img id="frameImage" src="frame.png" alt="邊框" style="display: none;">
+                <div class="frame"></div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="zoomInput">
+                        縮放比例
+                        <span class="en">Zoom</span>:
+                    </label>
+                    <input type="range" id="zoomInput" min="50" max="200" value="100">
+                    <span id="zoomValue">100%</span>
+                </div>
+                <button id="downloadBtn" class="download-button">
+                    下載圖片
+                    <span class="en">Download</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 

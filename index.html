@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>幣安頭像產生器 - Binance Icon Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background-color: #1a1a1a;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 90%;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 2rem;
+            color: #FCD535;
+        }
+
+        .shape-options {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .shape-option {
+            text-decoration: none;
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            background-color: #FCD535;
+            color: #000000;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            width: 200px;
+        }
+
+        .shape-option:hover {
+            background-color: #F0B90B;
+        }
+
+        .shape-preview {
+            width: 100px;
+            height: 100px;
+            background-color: #000000;
+            margin-bottom: 1rem;
+            border: 2px solid #FCD535;
+        }
+
+        .circle-preview {
+            border-radius: 50%;
+        }
+
+        .square-preview {
+            border-radius: 8px;
+        }
+
+        p {
+            color: #ffffff;
+            margin-bottom: 2rem;
+        }
+
+        .option-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .en {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            幣安頭像產生器
+            <div class="en">Binance Icon Generator</div>
+        </h1>
+        <p>
+            請選擇您想要的頭像框架形狀
+            <span class="en" style="display: block; margin-top: 0.5rem;">
+                Please select your preferred frame shape
+            </span>
+        </p>
+        <div class="shape-options">
+            <a href="circle.html" class="shape-option">
+                <div class="shape-preview circle-preview"></div>
+                <div class="option-text">
+                    圓形框架
+                    <span class="en">Circle Frame</span>
+                </div>
+            </a>
+            <a href="square.html" class="shape-option">
+                <div class="shape-preview square-preview"></div>
+                <div class="option-text">
+                    方形框架
+                    <span class="en">Square Frame</span>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html> 
