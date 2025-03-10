@@ -29,13 +29,14 @@ body {
     margin-bottom: 2rem;
     position: relative;
     width: 100%;
-    min-height: 80px;
+    min-height: 120px;
+    padding-top: 60px;
 }
 
 .back-button {
     position: absolute;
     left: 0;
-    top: 0;
+    top: 15px;
     transform: none;
     text-decoration: none;
     color: #FCD535;
@@ -74,7 +75,7 @@ h1 {
     margin-bottom: 2rem;
     color: #FCD535;
     width: 100%;
-    padding-top: 50px;
+    padding-top: 0;
 }
 
 .upload-section {
@@ -265,20 +266,20 @@ h1 .en {
     }
 
     .header {
-        min-height: 100px;
+        min-height: 140px;
+        padding-top: 70px;
     }
 
     h1 {
         font-size: 1.5rem;
-        padding-top: 40px;
         margin-bottom: 1rem;
     }
 
     .back-button {
         font-size: 0.9rem;
         padding: 0.4rem 0.8rem;
-        top: 5px;
-        left: 5px;
+        top: 20px;
+        left: 10px;
     }
 
     h1 .en {
