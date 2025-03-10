@@ -205,8 +205,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.clearRect(0, 0, totalSize, totalSize);
 
             const zoom = parseInt(zoomInput.value) / 100;
-            const imageSize = Math.round(totalSize * 0.8);
-            const scaledSize = originalSize / Math.max(zoom, 1);
+            const imageSize = Math.round(totalSize * 0.8);  // 圖片顯示區域大小
+            
+            // 根據縮放比例計算實際需要的圖片大小
+            const scaledDisplaySize = imageSize * zoom;
+            const scaledSize = originalSize / zoom;
             
             const centerX = totalSize / 2;
             const centerY = totalSize / 2;
@@ -218,13 +221,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             const y = centerY - imageSize / 2;
             ctx.rect(x, y, imageSize, imageSize);
             ctx.clip();
+
+            // 計算源圖片的裁剪區域
+            const sourceX = currentX + (originalSize - scaledSize) / 2;
+            const sourceY = currentY + (originalSize - scaledSize) / 2;
+            
+            // 計算繪製位置，確保圖片中心點對齊預覽區域中心點
+            const drawX = centerX - (scaledDisplaySize / 2);
+            const drawY = centerY - (scaledDisplaySize / 2);
             
             ctx.drawImage(
                 originalImage,
-                currentX, currentY,
+                sourceX, sourceY,
                 scaledSize, scaledSize,
-                x, y,
-                imageSize, imageSize
+                drawX, drawY,
+                scaledDisplaySize, scaledDisplaySize
             );
             ctx.restore();
 
@@ -233,7 +244,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const link = document.createElement('a');
             link.download = 'edited-image.png';
-            // 確保使用 PNG 格式並保留透明度
             link.href = canvas.toDataURL('image/png');
             link.click();
         } catch (error) {
