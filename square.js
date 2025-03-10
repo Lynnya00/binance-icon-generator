@@ -1,240 +1,195 @@
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', function() {
     const imageInput = document.getElementById('imageInput');
     const previewImage = document.getElementById('previewImage');
-    const frameImage = document.getElementById('frameImage');
+    const previewContainer = document.querySelector('.preview-container');
     const editorContainer = document.getElementById('editorContainer');
     const zoomInput = document.getElementById('zoomInput');
     const zoomValue = document.getElementById('zoomValue');
     const downloadBtn = document.getElementById('downloadBtn');
-    const imageContainer = document.querySelector('.image-container');
-    const previewContainer = document.querySelector('.preview-container');
+    const frameImage = document.getElementById('frameImage');
 
-    let originalImage = null;
-    let originalSize = 0;
-    let cropX = 0;
-    let cropY = 0;
     let isDragging = false;
-    let lastMouseX = 0;
-    let lastMouseY = 0;
     let currentX = 0;
     let currentY = 0;
-    let dragSensitivity = 1.5;
-    let isFrameLoaded = false;
-    let frameImageObj = null;
+    let initialX = 0;
+    let initialY = 0;
+    let xOffset = 0;
+    let yOffset = 0;
+    let scale = 1;
 
-    // 預加載邊框圖片
-    try {
-        frameImageObj = new Image();
-        frameImageObj.src = frameImage.src;
-        await new Promise((resolve, reject) => {
-            frameImageObj.onload = () => {
-                isFrameLoaded = true;
-                console.log('Frame image loaded');
-                resolve();
-            };
-            frameImageObj.onerror = reject;
-            if (frameImageObj.complete) {
-                isFrameLoaded = true;
-                resolve();
-            }
-        });
-    } catch (error) {
-        console.error('無法載入邊框圖片:', error);
+    // 觸控事件處理
+    function handleTouchStart(e) {
+        if (e.touches && e.touches.length === 1) {
+            isDragging = true;
+            initialX = e.touches[0].clientX - xOffset;
+            initialY = e.touches[0].clientY - yOffset;
+            previewImage.style.cursor = 'grabbing';
+        }
     }
 
-    imageInput.addEventListener('change', (e) => {
+    function handleTouchMove(e) {
+        if (isDragging && e.touches && e.touches.length === 1) {
+            e.preventDefault();
+            currentX = e.touches[0].clientX - initialX;
+            currentY = e.touches[0].clientY - initialY;
+
+            xOffset = currentX;
+            yOffset = currentY;
+
+            setTransform();
+        }
+    }
+
+    function handleTouchEnd() {
+        isDragging = false;
+        previewImage.style.cursor = 'grab';
+    }
+
+    // 滑鼠事件處理
+    function handleMouseDown(e) {
+        isDragging = true;
+        initialX = e.clientX - xOffset;
+        initialY = e.clientY - yOffset;
+        previewImage.style.cursor = 'grabbing';
+    }
+
+    function handleMouseMove(e) {
+        if (isDragging) {
+            e.preventDefault();
+            currentX = e.clientX - initialX;
+            currentY = e.clientY - initialY;
+
+            xOffset = currentX;
+            yOffset = currentY;
+
+            setTransform();
+        }
+    }
+
+    function handleMouseUp() {
+        isDragging = false;
+        previewImage.style.cursor = 'grab';
+    }
+
+    function setTransform() {
+        // 限制拖曳範圍
+        const containerRect = previewContainer.getBoundingClientRect();
+        const imageRect = previewImage.getBoundingClientRect();
+        
+        const maxX = (imageRect.width * scale - containerRect.width) / 2;
+        const maxY = (imageRect.height * scale - containerRect.height) / 2;
+        
+        xOffset = Math.min(Math.max(xOffset, -maxX), maxX);
+        yOffset = Math.min(Math.max(yOffset, -maxY), maxY);
+
+        previewImage.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(${scale})`;
+    }
+
+    // 圖片上傳處理
+    imageInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (event) => {
-                originalImage = new Image();
-                originalImage.src = event.target.result;
-                originalImage.onload = () => {
-                    // 計算裁剪位置，使圖片從中心裁剪為正方形
-                    originalSize = Math.min(originalImage.width, originalImage.height);
-                    cropX = (originalImage.width - originalSize) / 2;
-                    cropY = (originalImage.height - originalSize) / 2;
-                    currentX = cropX;
-                    currentY = cropY;
-                    
-                    // 重置縮放
-                    zoomInput.value = 100;
-                    updatePreview();
-                    updateImageSize();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.onload = function() {
                     editorContainer.style.display = 'block';
-
-                    // 更新拖曳靈敏度
-                    dragSensitivity = Math.max(1, Math.min(2, originalImage.width / originalSize));
+                    resetImagePosition();
                 };
             };
             reader.readAsDataURL(file);
         }
     });
 
-    function updatePreview() {
-        if (!originalImage) return;
+    // 縮放處理
+    zoomInput.addEventListener('input', function() {
+        scale = this.value / 100;
+        zoomValue.textContent = this.value + '%';
+        setTransform();
+    });
 
-        const zoom = parseInt(zoomInput.value) / 100;
-        const containerSize = previewContainer.offsetWidth;
-        const displaySize = containerSize * Math.max(1, zoom);
-
-        // 更新圖片樣式
-        previewImage.style.width = `${displaySize}px`;
-        previewImage.style.height = `${displaySize}px`;
-        previewImage.style.left = `${(containerSize - displaySize) / 2}px`;
-        previewImage.style.top = `${(containerSize - displaySize) / 2}px`;
-        
-        // 創建一個臨時canvas來裁剪預覽圖片
-        const tempCanvas = document.createElement('canvas');
-        const scaledSize = originalSize / Math.max(zoom, 1);
-        tempCanvas.width = originalSize;
-        tempCanvas.height = originalSize;
-        const tempCtx = tempCanvas.getContext('2d');
-
-        // 設置黑色背景
-        tempCtx.fillStyle = 'black';
-        tempCtx.fillRect(0, 0, originalSize, originalSize);
-        
-        // 在臨時canvas上繪製裁剪後的圖片
-        tempCtx.drawImage(
-            originalImage,
-            currentX, currentY,
-            scaledSize, scaledSize,
-            0, 0,
-            originalSize, originalSize
-        );
-        
-        // 將裁剪後的圖片設為預覽圖片的源
-        previewImage.src = tempCanvas.toDataURL();
+    // 重置圖片位置
+    function resetImagePosition() {
+        xOffset = 0;
+        yOffset = 0;
+        scale = 1;
+        zoomInput.value = 100;
+        zoomValue.textContent = '100%';
+        setTransform();
     }
 
-    function updateImageSize() {
-        if (originalImage) {
-            const zoom = parseInt(zoomInput.value);
-            zoomValue.textContent = `${zoom}%`;
-            updatePreview();
-        }
-    }
+    // 下載處理
+    downloadBtn.addEventListener('click', async function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const size = 800; // 輸出大小
+        canvas.width = size;
+        canvas.height = size;
 
-    // 優化的拖曳功能
-    previewContainer.addEventListener('mousedown', (e) => {
-        if (!originalImage) return;
-        
-        isDragging = true;
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
-        previewContainer.style.cursor = 'grabbing';
-        e.preventDefault();
-    });
+        // 設定白色背景
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, size, size);
 
-    document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
+        // 計算裁剪區域
+        const containerRect = previewContainer.getBoundingClientRect();
+        const imageRect = previewImage.getBoundingClientRect();
 
-        const deltaX = (e.clientX - lastMouseX) * dragSensitivity;
-        const deltaY = (e.clientY - lastMouseY) * dragSensitivity;
-
-        lastMouseX = e.clientX;
-        lastMouseY = e.clientY;
-
-        // 計算當前縮放比例
-        const zoom = parseInt(zoomInput.value) / 100;
-        
-        // 根據縮放比例調整移動範圍
-        let newX = currentX - deltaX;
-        let newY = currentY - deltaY;
-
-        // 計算考慮縮放後的最大範圍
-        const scaledSize = originalSize / Math.max(zoom, 1);
-        const maxX = originalImage.width - scaledSize;
-        const maxY = originalImage.height - scaledSize;
-
-        // 使用 clamp 函數來限制範圍，允許負值以支持更大範圍的移動
-        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
-        newX = clamp(newX, -maxX, maxX);
-        newY = clamp(newY, -maxY, maxY);
-
-        if (newX !== currentX || newY !== currentY) {
-            currentX = newX;
-            currentY = newY;
-            requestAnimationFrame(() => {
-                updatePreview();
-            });
-        }
-    });
-
-    document.addEventListener('mouseup', () => {
-        if (!isDragging) return;
-        isDragging = false;
-        previewContainer.style.cursor = 'grab';
-    });
-
-    previewContainer.addEventListener('selectstart', (e) => {
-        if (isDragging) e.preventDefault();
-    });
-
-    previewContainer.addEventListener('mouseover', () => {
-        if (originalImage) {
-            previewContainer.style.cursor = 'grab';
-        }
-    });
-
-    previewContainer.addEventListener('mouseout', () => {
-        if (!isDragging) {
-            previewContainer.style.cursor = 'default';
-        }
-    });
-
-    window.addEventListener('resize', updateImageSize);
-    zoomInput.addEventListener('input', updateImageSize);
-
-    downloadBtn.addEventListener('click', async () => {
-        if (!originalImage || !isFrameLoaded) {
-            alert('請等待圖片載入完成');
-            return;
-        }
-
-        try {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+        // 繪製圖片
+        const drawImage = () => {
+            const aspectRatio = previewImage.naturalWidth / previewImage.naturalHeight;
+            let drawWidth = size * scale;
+            let drawHeight = drawWidth / aspectRatio;
             
-            const totalSize = 800;
-            canvas.width = totalSize;
-            canvas.height = totalSize;
+            if (drawHeight < size * scale) {
+                drawHeight = size * scale;
+                drawWidth = drawHeight * aspectRatio;
+            }
 
-            const zoom = parseInt(zoomInput.value) / 100;
-            const imageSize = Math.round(totalSize * 0.8);
-            const scaledSize = originalSize / Math.max(zoom, 1);
-            
-            const centerX = totalSize / 2;
-            const centerY = totalSize / 2;
+            const drawX = size/2 - drawWidth/2 + (xOffset * size / containerRect.width);
+            const drawY = size/2 - drawHeight/2 + (yOffset * size / containerRect.height);
 
-            // 先畫黑色背景
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, totalSize, totalSize);
+            ctx.drawImage(previewImage, drawX, drawY, drawWidth, drawHeight);
+        };
 
-            // 繪製圖片（方形不需要裁剪）
-            const drawSize = imageSize;
-            const x = centerX - drawSize / 2;
-            const y = centerY - drawSize / 2;
-            
-            ctx.drawImage(
-                originalImage,
-                currentX, currentY,
-                scaledSize, scaledSize,
-                x, y,
-                drawSize, drawSize
-            );
+        drawImage();
 
-            // 繪製邊框圖片
-            ctx.drawImage(frameImageObj, 0, 0, totalSize, totalSize);
+        // 等待邊框圖片載入
+        await new Promise((resolve) => {
+            if (frameImage.complete) {
+                resolve();
+            } else {
+                frameImage.onload = resolve;
+            }
+        });
 
-            const link = document.createElement('a');
-            link.download = 'edited-image.png';
-            link.href = canvas.toDataURL('image/png', 1.0);
-            link.click();
-        } catch (error) {
-            console.error('下載圖片時發生錯誤:', error);
-            alert('下載圖片時發生錯誤，請重試');
-        }
+        // 繪製邊框
+        ctx.drawImage(frameImage, 0, 0, size, size);
+
+        // 下載圖片
+        const link = document.createElement('a');
+        link.download = 'binance-avatar.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
     });
+
+    // 添加事件監聽器
+    previewContainer.addEventListener('mousedown', handleMouseDown);
+    previewContainer.addEventListener('mousemove', handleMouseMove);
+    previewContainer.addEventListener('mouseup', handleMouseUp);
+    previewContainer.addEventListener('mouseleave', handleMouseUp);
+
+    // 觸控事件
+    previewContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
+    previewContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+    previewContainer.addEventListener('touchend', handleTouchEnd);
+
+    // 設定初始游標樣式
+    previewImage.style.cursor = 'grab';
+
+    // 防止預設的觸控行為（如滾動）
+    previewContainer.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 }); 
