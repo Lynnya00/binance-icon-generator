@@ -16,6 +16,26 @@ document.addEventListener('DOMContentLoaded', function() {
     let xOffset = 0;
     let yOffset = 0;
     let scale = 1;
+    let originalImageAspectRatio = 1;
+
+    // 圖片上傳處理
+    imageInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    originalImageAspectRatio = img.width / img.height;
+                    previewImage.src = e.target.result;
+                    editorContainer.style.display = 'block';
+                    resetImagePosition();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
     // 觸控事件處理
     function handleTouchStart(e) {
@@ -76,30 +96,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const containerRect = previewContainer.getBoundingClientRect();
         const imageRect = previewImage.getBoundingClientRect();
         
+        // 計算最大可移動範圍
         const maxX = (imageRect.width * scale - containerRect.width) / 2;
         const maxY = (imageRect.height * scale - containerRect.height) / 2;
         
+        // 限制移動範圍
         xOffset = Math.min(Math.max(xOffset, -maxX), maxX);
         yOffset = Math.min(Math.max(yOffset, -maxY), maxY);
 
         previewImage.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(${scale})`;
     }
-
-    // 圖片上傳處理
-    imageInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImage.src = e.target.result;
-                previewImage.onload = function() {
-                    editorContainer.style.display = 'block';
-                    resetImagePosition();
-                };
-            };
-            reader.readAsDataURL(file);
-        }
-    });
 
     // 縮放處理
     zoomInput.addEventListener('input', function() {
@@ -115,6 +121,23 @@ document.addEventListener('DOMContentLoaded', function() {
         scale = 1;
         zoomInput.value = 100;
         zoomValue.textContent = '100%';
+        
+        // 根據圖片比例調整初始縮放
+        const containerRect = previewContainer.getBoundingClientRect();
+        const containerAspectRatio = containerRect.width / containerRect.height;
+        
+        if (originalImageAspectRatio > containerAspectRatio) {
+            // 圖片較寬，以高度為基準
+            scale = containerRect.height / (containerRect.width / originalImageAspectRatio);
+        } else {
+            // 圖片較高，以寬度為基準
+            scale = containerRect.width / (containerRect.height * originalImageAspectRatio);
+        }
+        
+        // 更新縮放值
+        zoomInput.value = Math.round(scale * 100);
+        zoomValue.textContent = Math.round(scale * 100) + '%';
+        
         setTransform();
     }
 

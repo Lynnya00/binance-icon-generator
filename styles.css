@@ -133,8 +133,8 @@ h1 {
 
 .preview-container.square {
     border-radius: 0;
-    width: 60%;
-    height: 60%;
+    width: 80%;
+    height: 80%;
 }
 
 #previewImage {
@@ -163,6 +163,8 @@ h1 {
 }
 
 .frame.square {
+    width: 90%;
+    height: 90%;
     background-image: url('frame-square.png');
 }
 
