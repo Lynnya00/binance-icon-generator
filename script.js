@@ -202,15 +202,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             canvas.width = totalSize;
             canvas.height = totalSize;
 
-            // 清除畫布（透明背景）
-            ctx.clearRect(0, 0, totalSize, totalSize);
-
             const zoom = parseInt(zoomInput.value) / 100;
             const imageSize = Math.round(totalSize * 0.8);
             const scaledSize = originalSize / Math.max(zoom, 1);
             
             const centerX = totalSize / 2;
             const centerY = totalSize / 2;
+
+            // 先畫黑色背景
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, totalSize, totalSize);
 
             // 創建圓形裁剪區域
             ctx.save();
@@ -242,7 +243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.drawImage(frameImageObj, 0, 0, totalSize, totalSize);
 
             const link = document.createElement('a');
-            link.download = 'binance-avatar.png';
+            link.download = 'edited-image.png';
             link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
         } catch (error) {
@@ -250,81 +251,4 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('下載圖片時發生錯誤，請重試');
         }
     });
-
-    // 觸控事件處理
-    function handleTouchStart(e) {
-        if (e.touches && e.touches.length === 1) {
-            isDragging = true;
-            currentX = e.touches[0].clientX;
-            currentY = e.touches[0].clientY;
-            previewImage.style.cursor = 'grabbing';
-        }
-    }
-
-    function handleTouchMove(e) {
-        if (isDragging && e.touches && e.touches.length === 1) {
-            e.preventDefault();
-            currentX = e.touches[0].clientX;
-            currentY = e.touches[0].clientY;
-
-            setTransform();
-        }
-    }
-
-    function handleTouchEnd() {
-        isDragging = false;
-        previewImage.style.cursor = 'grab';
-    }
-
-    // 滑鼠事件處理
-    function handleMouseDown(e) {
-        isDragging = true;
-        currentX = e.clientX;
-        currentY = e.clientY;
-        previewImage.style.cursor = 'grabbing';
-    }
-
-    function handleMouseMove(e) {
-        if (isDragging) {
-            e.preventDefault();
-            currentX = e.clientX;
-            currentY = e.clientY;
-
-            setTransform();
-        }
-    }
-
-    function handleMouseUp() {
-        isDragging = false;
-        previewImage.style.cursor = 'grab';
-    }
-
-    function setTransform() {
-        // 限制拖曳範圍
-        const containerRect = previewContainer.getBoundingClientRect();
-        const imageRect = previewImage.getBoundingClientRect();
-        
-        const maxX = (imageRect.width - containerRect.width) / 2;
-        const maxY = (imageRect.height - containerRect.height) / 2;
-        
-        currentX = Math.min(Math.max(currentX, -maxX), maxX);
-        currentY = Math.min(Math.max(currentY, -maxY), maxY);
-
-        previewImage.style.transform = `translate(${currentX}px, ${currentY}px) scale(${zoomInput.value / 100})`;
-    }
-
-    // 添加事件監聽器
-    previewContainer.addEventListener('touchstart', handleTouchStart, { passive: false });
-    previewContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
-    previewContainer.addEventListener('touchend', handleTouchEnd);
-
-    // 設定初始游標樣式
-    previewImage.style.cursor = 'grab';
-
-    // 防止預設的觸控行為（如滾動）
-    previewContainer.addEventListener('touchstart', function(e) {
-        if (e.touches.length === 1) {
-            e.preventDefault();
-        }
-    }, { passive: false });
 }); 
