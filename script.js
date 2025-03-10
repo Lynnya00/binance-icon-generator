@@ -188,6 +188,98 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('resize', updateImageSize);
     zoomInput.addEventListener('input', updateImageSize);
 
+    // 手機觸控拖曳功能
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+    let initialPinchDistance = 0;
+    let initialZoom = 100;
+
+    previewContainer.addEventListener('touchstart', (e) => {
+        if (!originalImage) return;
+        
+        e.preventDefault();
+        isDragging = true;
+        
+        if (e.touches.length === 2) {
+            // 雙指觸控 - 準備縮放
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            initialPinchDistance = Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+            );
+            initialZoom = parseInt(zoomInput.value);
+        } else {
+            // 單指觸控 - 準備拖曳
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+        }
+    }, { passive: false });
+
+    previewContainer.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        if (e.touches.length === 2) {
+            // 雙指觸控 - 處理縮放
+            const touch1 = e.touches[0];
+            const touch2 = e.touches[1];
+            const currentDistance = Math.hypot(
+                touch2.clientX - touch1.clientX,
+                touch2.clientY - touch1.clientY
+            );
+
+            // 計算新的縮放值
+            const scale = currentDistance / initialPinchDistance;
+            let newZoom = Math.round(initialZoom * scale);
+            
+            // 限制縮放範圍在 50% 到 200% 之間
+            newZoom = Math.max(50, Math.min(200, newZoom));
+            
+            // 更新縮放滑桿和圖片
+            zoomInput.value = newZoom;
+            updateImageSize();
+        } else {
+            // 單指觸控 - 處理拖曳
+            const touch = e.touches[0];
+            const deltaX = (touch.clientX - lastTouchX) * dragSensitivity;
+            const deltaY = (touch.clientY - lastTouchY) * dragSensitivity;
+
+            lastTouchX = touch.clientX;
+            lastTouchY = touch.clientY;
+
+            const zoom = parseInt(zoomInput.value) / 100;
+            let newX = currentX - deltaX;
+            let newY = currentY - deltaY;
+
+            const scaledSize = originalSize / Math.max(zoom, 1);
+            const maxX = originalImage.width - scaledSize;
+            const maxY = originalImage.height - scaledSize;
+
+            const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+            newX = clamp(newX, -maxX, maxX);
+            newY = clamp(newY, -maxY, maxY);
+
+            if (newX !== currentX || newY !== currentY) {
+                currentX = newX;
+                currentY = newY;
+                requestAnimationFrame(() => {
+                    updatePreview();
+                });
+            }
+        }
+    }, { passive: false });
+
+    previewContainer.addEventListener('touchend', () => {
+        isDragging = false;
+        initialPinchDistance = 0;
+    });
+
+    previewContainer.addEventListener('touchcancel', () => {
+        isDragging = false;
+        initialPinchDistance = 0;
+    });
+
     downloadBtn.addEventListener('click', async () => {
         if (!originalImage || !isFrameLoaded) {
             alert('請等待圖片載入完成');
