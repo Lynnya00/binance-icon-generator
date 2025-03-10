@@ -3,7 +3,7 @@
 ## 線上版本 Online Version
 您可以直接使用線上版本，無需下載：
 You can use the online version without downloading:
-https://YOUR_USERNAME.github.io/binance-icon-generator
+https://Lynnya00.github.io/binance-icon-generator
 
 ## 說明 Description
 這是一個簡單的網頁應用程式，可以幫助您製作帶有幣安風格框架的頭像。
