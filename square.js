@@ -192,6 +192,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     let lastTouchY = 0;
     let initialPinchDistance = 0;
     let initialZoom = 100;
+    let lastMoveTime = 0;
+    let lastDeltaX = 0;
+    let lastDeltaY = 0;
+    let velocityX = 0;
+    let velocityY = 0;
+    let animationFrameId = null;
+    let touchSensitivity = 1.2;  // 降低觸控靈敏度以提高準確性
+
+    function applyInertia() {
+        if (Math.abs(velocityX) < 0.01 && Math.abs(velocityY) < 0.01) {
+            cancelAnimationFrame(animationFrameId);
+            return;
+        }
+
+        const friction = 0.95;
+        velocityX *= friction;
+        velocityY *= friction;
+
+        const zoom = parseInt(zoomInput.value) / 100;
+        let newX = currentX - velocityX;
+        let newY = currentY - velocityY;
+
+        const scaledSize = originalSize / Math.max(zoom, 1);
+        const maxX = originalImage.width - scaledSize;
+        const maxY = originalImage.height - scaledSize;
+
+        const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+        newX = clamp(newX, -maxX, maxX);
+        newY = clamp(newY, -maxY, maxY);
+
+        if (newX !== currentX || newY !== currentY) {
+            currentX = newX;
+            currentY = newY;
+            updatePreview();
+        }
+
+        animationFrameId = requestAnimationFrame(applyInertia);
+    }
 
     previewContainer.addEventListener('touchstart', (e) => {
         if (!originalImage) return;
@@ -199,8 +237,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         e.preventDefault();
         isDragging = true;
         
+        // 停止任何正在進行的慣性動畫
+        cancelAnimationFrame(animationFrameId);
+        velocityX = 0;
+        velocityY = 0;
+        
         if (e.touches.length === 2) {
-            // 雙指觸控 - 準備縮放
             const touch1 = e.touches[0];
             const touch2 = e.touches[1];
             initialPinchDistance = Math.hypot(
@@ -209,9 +251,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
             initialZoom = parseInt(zoomInput.value);
         } else {
-            // 單指觸控 - 準備拖曳
             lastTouchX = e.touches[0].clientX;
             lastTouchY = e.touches[0].clientY;
+            lastMoveTime = Date.now();
         }
     }, { passive: false });
 
@@ -219,8 +261,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!isDragging) return;
         e.preventDefault();
 
+        const currentTime = Date.now();
+        const timeElapsed = currentTime - lastMoveTime;
+
         if (e.touches.length === 2) {
-            // 雙指觸控 - 處理縮放
             const touch1 = e.touches[0];
             const touch2 = e.touches[1];
             const currentDistance = Math.hypot(
@@ -228,24 +272,32 @@ document.addEventListener('DOMContentLoaded', async () => {
                 touch2.clientY - touch1.clientY
             );
 
-            // 計算新的縮放值
             const scale = currentDistance / initialPinchDistance;
             let newZoom = Math.round(initialZoom * scale);
-            
-            // 限制縮放範圍在 50% 到 200% 之間
             newZoom = Math.max(50, Math.min(200, newZoom));
-            
-            // 更新縮放滑桿和圖片
-            zoomInput.value = newZoom;
-            updateImageSize();
+
+            if (Math.abs(newZoom - parseInt(zoomInput.value)) > 1) {
+                zoomInput.value = newZoom;
+                requestAnimationFrame(() => {
+                    updateImageSize();
+                });
+            }
         } else {
-            // 單指觸控 - 處理拖曳
             const touch = e.touches[0];
-            const deltaX = (touch.clientX - lastTouchX) * dragSensitivity;
-            const deltaY = (touch.clientY - lastTouchY) * dragSensitivity;
+            const deltaX = (touch.clientX - lastTouchX) * touchSensitivity;
+            const deltaY = (touch.clientY - lastTouchY) * touchSensitivity;
+
+            // 計算速度（像素/毫秒）
+            if (timeElapsed > 0) {
+                velocityX = deltaX / timeElapsed * 16.67; // 轉換為每幀的速度
+                velocityY = deltaY / timeElapsed * 16.67;
+            }
 
             lastTouchX = touch.clientX;
             lastTouchY = touch.clientY;
+            lastMoveTime = currentTime;
+            lastDeltaX = deltaX;
+            lastDeltaY = deltaY;
 
             const zoom = parseInt(zoomInput.value) / 100;
             let newX = currentX - deltaX;
@@ -270,13 +322,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, { passive: false });
 
     previewContainer.addEventListener('touchend', () => {
+        if (!isDragging) return;
         isDragging = false;
+
+        // 如果有足夠的速度，啟動慣性滾動
+        if (Math.abs(velocityX) > 0.1 || Math.abs(velocityY) > 0.1) {
+            requestAnimationFrame(applyInertia);
+        }
+
         initialPinchDistance = 0;
     });
 
     previewContainer.addEventListener('touchcancel', () => {
         isDragging = false;
         initialPinchDistance = 0;
+        cancelAnimationFrame(animationFrameId);
     });
 
     downloadBtn.addEventListener('click', async () => {
