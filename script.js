@@ -224,21 +224,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.closePath();
             ctx.clip();
 
-            // 計算縮放和位置
-            const scaledSize = originalSize / zoom;
-            const drawSize = imageSize;
-            const x = centerX - drawSize / 2;
-            const y = centerY - drawSize / 2;
+            // 使用與預覽相同的縮放邏輯
+            const scaledSize = originalSize / Math.max(zoom, 1);
+            const drawSize = imageSize * Math.max(1, zoom);
 
-            // 計算源圖片的裁剪位置，考慮當前拖曳位置
-            const sourceX = currentX;
-            const sourceY = currentY;
+            // 計算繪製位置，使其與預覽一致
+            const drawX = centerX - (drawSize / 2);
+            const drawY = centerY - (drawSize / 2);
             
             ctx.drawImage(
                 originalImage,
-                sourceX, sourceY,
+                currentX, currentY,
                 scaledSize, scaledSize,
-                x, y,
+                drawX, drawY,
                 drawSize, drawSize
             );
             ctx.restore();
