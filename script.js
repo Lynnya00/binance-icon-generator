@@ -208,10 +208,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const zoom = parseInt(zoomInput.value) / 100;
             const imageSize = Math.round(totalSize * 0.8);  // 圖片顯示區域大小
             
-            // 根據縮放比例計算實際需要的圖片大小
-            const scaledDisplaySize = imageSize * zoom;
-            const scaledSize = originalSize / zoom;
-            
             const centerX = totalSize / 2;
             const centerY = totalSize / 2;
 
@@ -228,20 +224,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.closePath();
             ctx.clip();
 
-            // 計算繪製位置，確保圖片中心點對齊預覽區域中心點
-            const drawX = centerX - (scaledDisplaySize / 2);
-            const drawY = centerY - (scaledDisplaySize / 2);
+            // 計算縮放和位置
+            const scaledSize = originalSize / zoom;
+            const drawSize = imageSize;
+            const x = centerX - drawSize / 2;
+            const y = centerY - drawSize / 2;
 
-            // 計算源圖片的裁剪區域
-            const sourceX = currentX + (originalSize - scaledSize) / 2;
-            const sourceY = currentY + (originalSize - scaledSize) / 2;
+            // 計算源圖片的裁剪位置，考慮當前拖曳位置
+            const sourceX = currentX;
+            const sourceY = currentY;
             
             ctx.drawImage(
                 originalImage,
                 sourceX, sourceY,
                 scaledSize, scaledSize,
-                drawX, drawY,
-                scaledDisplaySize, scaledDisplaySize
+                x, y,
+                drawSize, drawSize
             );
             ctx.restore();
 
