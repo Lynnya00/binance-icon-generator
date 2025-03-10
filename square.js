@@ -149,9 +149,8 @@ document.addEventListener('DOMContentLoaded', function() {
         canvas.width = size;
         canvas.height = size;
 
-        // 設定白色背景
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, size, size);
+        // 清除畫布（透明背景）
+        ctx.clearRect(0, 0, size, size);
 
         // 計算裁剪區域
         const containerRect = previewContainer.getBoundingClientRect();
@@ -171,7 +170,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const drawX = size/2 - drawWidth/2 + (xOffset * size / containerRect.width);
             const drawY = size/2 - drawHeight/2 + (yOffset * size / containerRect.height);
 
-            ctx.drawImage(previewImage, drawX, drawY, drawWidth, drawHeight);
+            // 創建一個臨時畫布來繪製裁剪後的圖片
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = size;
+            tempCanvas.height = size;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // 在臨時畫布上繪製圖片
+            tempCtx.drawImage(previewImage, drawX, drawY, drawWidth, drawHeight);
+
+            // 將臨時畫布的內容繪製到主畫布
+            ctx.drawImage(tempCanvas, 0, 0);
         };
 
         drawImage();
@@ -188,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 繪製邊框
         ctx.drawImage(frameImage, 0, 0, size, size);
 
-        // 下載圖片
+        // 下載圖片（使用 PNG 格式以保持透明度）
         const link = document.createElement('a');
         link.download = 'binance-avatar.png';
         link.href = canvas.toDataURL('image/png');

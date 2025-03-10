@@ -202,16 +202,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             canvas.width = totalSize;
             canvas.height = totalSize;
 
+            // 清除畫布（透明背景）
+            ctx.clearRect(0, 0, totalSize, totalSize);
+
             const zoom = parseInt(zoomInput.value) / 100;
             const imageSize = Math.round(totalSize * 0.8);
             const scaledSize = originalSize / Math.max(zoom, 1);
             
             const centerX = totalSize / 2;
             const centerY = totalSize / 2;
-
-            // 先畫黑色背景
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, totalSize, totalSize);
 
             // 創建圓形裁剪區域
             ctx.save();
@@ -243,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.drawImage(frameImageObj, 0, 0, totalSize, totalSize);
 
             const link = document.createElement('a');
-            link.download = 'edited-image.png';
+            link.download = 'binance-avatar.png';
             link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
         } catch (error) {
