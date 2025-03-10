@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.clearRect(0, 0, totalSize, totalSize);
 
             const zoom = parseInt(zoomInput.value) / 100;
-            const imageSize = Math.round(totalSize * 0.8);  // 圖片顯示區域大小
+            const imageSize = Math.round(totalSize * 0.7);  // 縮小圖片顯示區域，確保不會超出邊框
             
             const centerX = totalSize / 2;
             const centerY = totalSize / 2;
@@ -232,6 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const sourceWidth = scaledSize;
             const sourceHeight = scaledSize;
 
+            // 繪製圖片
             ctx.drawImage(
                 originalImage,
                 sourceX, sourceY,
