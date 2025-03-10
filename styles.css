@@ -29,7 +29,7 @@ body {
     margin-bottom: 2rem;
     position: relative;
     width: 100%;
-    padding-top: 40px;
+    min-height: 80px;
 }
 
 .back-button {
@@ -74,6 +74,7 @@ h1 {
     margin-bottom: 2rem;
     color: #FCD535;
     width: 100%;
+    padding-top: 50px;
 }
 
 .upload-section {
@@ -264,19 +265,25 @@ h1 .en {
     }
 
     .header {
-        padding-top: 50px;
+        min-height: 100px;
     }
 
     h1 {
         font-size: 1.5rem;
-        margin-top: 0.5rem;
-        text-align: center;
-        width: 100%;
+        padding-top: 40px;
+        margin-bottom: 1rem;
     }
 
     .back-button {
         font-size: 0.9rem;
         padding: 0.4rem 0.8rem;
+        top: 5px;
+        left: 5px;
+    }
+
+    h1 .en {
+        font-size: 0.7em;
+        margin-top: 0.3rem;
     }
 
     .shape-options {
